@@ -2,7 +2,11 @@ module dr.agenda
 
 go 1.24.0
 
-require github.com/gin-gonic/gin v1.10.1
+require (
+	github.com/gin-gonic/gin v1.10.1
+	github.com/lib/pq v1.10.9
+	github.com/shopspring/decimal v1.4.0
+)
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
