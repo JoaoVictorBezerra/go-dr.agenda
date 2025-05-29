@@ -28,9 +28,10 @@ func main() {
 func setupServer(db *sql.DB) *gin.Engine {
 	server := gin.Default()
 
-	healthInsuranceHandler := factory.InsuranceFactory(db)
+	InsuranceHandler := factory.InsuranceFactory(db)
+	userHandler := factory.UserFactory(db)
 
-	routes.RegisterInsuranceRoutes(server, &healthInsuranceHandler)
-
+	routes.RegisterInsuranceRoutes(server, &InsuranceHandler)
+	routes.RegisterUserRoutes(server, &userHandler)
 	return server
 }
