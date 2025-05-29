@@ -100,22 +100,41 @@ func (handler *InsuranceHandler) CreateInsurance(ctx *gin.Context) {
 }
 
 func (handler *InsuranceHandler) UpdateInsurance(ctx *gin.Context) {
-	var input dto.CreateInsuranceRequest
+	var input dto.UpdateInsuranceRequest
+	var id = ctx.Param("id")
 
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, dto.Response[any]{
 			Data:    nil,
-			Message: "Dados inválidos",
+			Message: err.Error(),
 			Success: false,
 		})
 		return
 	}
 
-	insurance, err := handler.useCase.CreateInsurance(input)
+	insurance, err := handler.useCase.UpdateInsurance(id, input)
 	if err != nil {
+		if errors.Is(err, customErrors.InsuranceNotFoundError) {
+			ctx.JSON(http.StatusNotFound, dto.Response[error]{
+				Data:    nil,
+				Message: constants.UpdateInsuranceError,
+				Success: false,
+			})
+			return
+		}
+
+		if errors.Is(err, customErrors.UpdateInsuranceError) {
+			ctx.JSON(http.StatusBadRequest, dto.Response[error]{
+				Data:    nil,
+				Message: constants.UpdateInsuranceError,
+				Success: false,
+			})
+			return
+		}
+
 		ctx.JSON(http.StatusInternalServerError, dto.Response[error]{
 			Data:    &err,
-			Message: constants.CreateInsuranceError,
+			Message: constants.UpdateInsuranceError,
 			Success: false,
 		})
 		return
@@ -123,7 +142,7 @@ func (handler *InsuranceHandler) UpdateInsurance(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, dto.Response[model.Insurance]{
 		Data:    insurance,
-		Message: constants.CreateInsuranceSuccess,
+		Message: constants.UpdateInsuranceSuccess,
 		Success: true,
 	})
 }

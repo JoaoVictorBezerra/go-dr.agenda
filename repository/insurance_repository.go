@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"dr.agenda/dto"
 	"dr.agenda/enum"
+	"dr.agenda/helpers"
 	"dr.agenda/model"
 	"errors"
 	"fmt"
@@ -49,7 +50,8 @@ func (repository *InsuranceRepository) GetInsurances() ([]model.Insurance, error
 
 		insuranceList = append(insuranceList, insuranceObj)
 	}
-	rows.Close()
+
+	helpers.CloseRows(rows)
 
 	return insuranceList, nil
 }
@@ -99,7 +101,7 @@ func (repository *InsuranceRepository) CreateInsurance(insurance dto.CreateInsur
 		return nil, queryErr
 	}
 
-	prepare.Close()
+	helpers.CloseStmt(prepare)
 
 	createdInsurance, getByIdErr := repository.GetInsuranceById(id)
 
@@ -112,7 +114,7 @@ func (repository *InsuranceRepository) CreateInsurance(insurance dto.CreateInsur
 }
 
 func (repository *InsuranceRepository) SuspendInsurance(id string) (*model.Insurance, error) {
-	const query string = "UPDATE Insurance SET status = $1 WHERE id = $2"
+	const query string = "UPDATE Insurance i SET status = $1 WHERE id = $2 RETURNING i.*"
 
 	prepare, prepareErr := repository.database.Prepare(query)
 
@@ -121,22 +123,54 @@ func (repository *InsuranceRepository) SuspendInsurance(id string) (*model.Insur
 		return nil, prepareErr
 	}
 
-	_, queryErr := prepare.Exec(enum.SUSPENDED, id)
+	var updatedInsurance model.Insurance
+	queryErr := prepare.QueryRow(enum.SUSPENDED, id).Scan(
+		&updatedInsurance.Id,
+		&updatedInsurance.Name,
+		&updatedInsurance.Description,
+		&updatedInsurance.Price,
+		&updatedInsurance.Benefits,
+		&updatedInsurance.Status,
+	)
 
 	if queryErr != nil {
 		fmt.Println(queryErr)
 		return nil, queryErr
 	}
 
-	prepare.Close()
+	helpers.CloseStmt(prepare)
 
-	updatedInsurance, getByIdErr := repository.GetInsuranceById(id)
+	return &updatedInsurance, nil
 
-	if getByIdErr != nil {
-		fmt.Println(getByIdErr)
-		return nil, getByIdErr
+}
+
+func (repository *InsuranceRepository) UpdateInsurance(id string, dto dto.UpdateInsuranceRequest) (*model.Insurance, error) {
+	const query string = "UPDATE Insurance i SET name = $2, description = $3, price = $4, benefits = $5 WHERE id = $1 RETURNING i.*"
+
+	prepare, prepareErr := repository.database.Prepare(query)
+
+	if prepareErr != nil {
+		fmt.Println(prepareErr)
+		return nil, prepareErr
 	}
 
-	return updatedInsurance, nil
+	var updatedInsurance model.Insurance
 
+	queryErr := prepare.QueryRow(id, dto.Name, dto.Description, dto.Price, dto.Benefits).Scan(
+		&updatedInsurance.Id,
+		&updatedInsurance.Name,
+		&updatedInsurance.Description,
+		&updatedInsurance.Price,
+		&updatedInsurance.Benefits,
+		&updatedInsurance.Status,
+	)
+
+	if queryErr != nil {
+		fmt.Println(queryErr)
+		return nil, queryErr
+	}
+
+	helpers.CloseStmt(prepare)
+
+	return &updatedInsurance, nil
 }
