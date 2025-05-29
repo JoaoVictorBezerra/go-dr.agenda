@@ -28,7 +28,7 @@ func main() {
 func setupServer(db *sql.DB) *gin.Engine {
 	server := gin.Default()
 
-	healthInsuranceHandler := factory.InsuranceFactory(db)
+	healthInsuranceHandler := factory.HealthInsuranceFactory(db)
 
 	routes.RegisterInsuranceRoutes(server, &healthInsuranceHandler)
 
