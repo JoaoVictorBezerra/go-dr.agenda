@@ -4,7 +4,7 @@ import (
 	"dr.agenda/enum"
 )
 
-type HealthInsurance struct {
+type Insurance struct {
 	Id          int                        `json:"id"`
 	Name        string                     `json:"name"`
 	Description string                     `json:"description"`
