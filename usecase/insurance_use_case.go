@@ -19,8 +19,8 @@ func NewInsuranceUseCase(repo repository.InsuranceRepository) InsuranceUseCase {
 	}
 }
 
-func (useCase *InsuranceUseCase) GetActiveInsurances() ([]model.Insurance, error) {
-	insurances, _ := useCase.repository.GetInsurances()
+func (uc *InsuranceUseCase) GetActiveInsurances() ([]model.Insurance, error) {
+	insurances, _ := uc.repository.GetInsurances()
 	var activeInsurancesList []model.Insurance
 	activeInsurancesList = helpers.Filter(insurances, func(element model.Insurance) bool {
 		return element.Status == enum.ACTIVE
@@ -28,8 +28,8 @@ func (useCase *InsuranceUseCase) GetActiveInsurances() ([]model.Insurance, error
 	return activeInsurancesList, nil
 }
 
-func (useCase *InsuranceUseCase) GetInsuranceById(id string) (*model.Insurance, error) {
-	insurance, repositoryErr := useCase.repository.GetInsuranceById(id)
+func (uc *InsuranceUseCase) GetInsuranceById(id string) (*model.Insurance, error) {
+	insurance, repositoryErr := uc.repository.GetInsuranceById(id)
 
 	if repositoryErr != nil {
 		return nil, repositoryErr
@@ -42,23 +42,34 @@ func (useCase *InsuranceUseCase) GetInsuranceById(id string) (*model.Insurance, 
 	return insurance, nil
 }
 
-func (useCase *InsuranceUseCase) CreateInsurance(insuranceDTO dto.CreateInsuranceRequest) (*model.Insurance, error) {
-	insurance, err := useCase.repository.CreateInsurance(insuranceDTO)
+func (uc *InsuranceUseCase) CreateInsurance(insuranceDTO dto.CreateInsuranceRequest) (*model.Insurance, error) {
+	insurance, err := uc.repository.CreateInsurance(insuranceDTO)
 	return insurance, err
 }
 
-func (useCase *InsuranceUseCase) UpdateInsurance(id string, insuranceDTO dto.CreateInsuranceRequest) (*model.Insurance, error) {
-	return nil, nil
-}
-
-func (useCase *InsuranceUseCase) SuspendHealthInsurance(id string) (*model.Insurance, error) {
-	_, getInsuranceByIdErr := useCase.GetInsuranceById(id)
+func (uc *InsuranceUseCase) UpdateInsurance(id string, dto dto.UpdateInsuranceRequest) (*model.Insurance, error) {
+	_, getInsuranceByIdErr := uc.GetInsuranceById(id)
 
 	if getInsuranceByIdErr != nil {
 		return nil, getInsuranceByIdErr
 	}
 
-	insurance, err := useCase.repository.SuspendInsurance(id)
+	updatedInsurance, updateInsuranceError := uc.repository.UpdateInsurance(id, dto)
+	if updateInsuranceError != nil {
+		return nil, customErrors.UpdateInsuranceError
+	}
+
+	return updatedInsurance, nil
+}
+
+func (uc *InsuranceUseCase) SuspendHealthInsurance(id string) (*model.Insurance, error) {
+	_, getInsuranceByIdErr := uc.GetInsuranceById(id)
+
+	if getInsuranceByIdErr != nil {
+		return nil, getInsuranceByIdErr
+	}
+
+	insurance, err := uc.repository.SuspendInsurance(id)
 
 	if err != nil {
 		return nil, err

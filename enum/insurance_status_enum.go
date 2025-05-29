@@ -1,8 +1,8 @@
 package enum
 
-type HealthInsuranceStatus string
+type InsuranceStatus string
 
 const (
-	SUSPENDED HealthInsuranceStatus = "SUSPENDED"
-	ACTIVE    HealthInsuranceStatus = "ACTIVE"
+	SUSPENDED InsuranceStatus = "SUSPENDED"
+	ACTIVE    InsuranceStatus = "ACTIVE"
 )
